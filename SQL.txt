@@ -273,6 +273,8 @@ CREATE OR REPLACE FUNCTION generateNCortegesForEachTable(n integer)
 	insert into USAGE(EXPERIMENT_ID, INVENTORY_ID) values (bInt, aInt);
 	end loop;
 
+	--denislovesdicks
+
 	outputText := 'Done!';
 	return outputText;
 	end;------------------------------------------------------------------------------------------------END тут

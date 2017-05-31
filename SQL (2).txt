@@ -1,0 +1,256 @@
+DROP TABLE TIMELINES CASCADE;
+DROP TABLE PLACES CASCADE;
+DROP TABLE MEMBERS CASCADE;
+DROP TABLE D_MAILS CASCADE;
+DROP TABLE TIMELEAPS CASCADE;
+DROP TABLE INVENTORY CASCADE;
+DROP TABLE EXPERIMENTS CASCADE;
+DROP TABLE LOCATION CASCADE;
+DROP TABLE PARTICIPATION CASCADE;
+DROP TABLE USAGE CASCADE;
+DROP TABLE INVENTIONS CASCADE;
+DROP TABLE INVENTING CASCADE;
+DROP TABLE CONSUMPTION CASCADE;
+DROP TABLE DISCOVERIES CASCADE;
+DROP TABLE DISCOVERING CASCADE;
+
+CREATE TABLE TIMELINES
+(
+ID SERIAL PRIMARY KEY,
+DIVERSION_LEVEL REAL NOT NULL CHECK (DIVERSION_LEVEL>=0 AND DIVERSION_LEVEL<1),
+REASON_OF_LEAP TEXT NOT NULL,
+DISTINCTIONS TEXT NOT NULL
+);
+
+CREATE TABLE PLACES
+(
+ID SERIAL PRIMARY KEY,
+ADRESS TEXT NOT NULL,
+SQUARE INT NOT NULL CHECK (SQUARE>0),
+FUNCTION TEXT
+);
+
+CREATE TABLE MEMBERS
+(
+ID SERIAL PRIMARY KEY,
+NAME TEXT NOT NULL,
+AGE INT NOT NULL CHECK (AGE>=0),
+HIRING_DATE DATE NOT NULL,
+WORKPLACE INT REFERENCES PLACES
+);
+
+CREATE TABLE D_MAILS
+(
+ID SERIAL PRIMARY KEY,
+SENDER INT REFERENCES MEMBERS,
+RECEPIENT INT REFERENCES MEMBERS,
+DATE_SEND DATE NOT NULL,
+DATE_RECIEVED DATE NOT NULL,
+TIMELINE_BEFORE INT REFERENCES TIMELINES,
+TIMELINE_AFTER INT REFERENCES TIMELINES,
+TEXT VARCHAR(32)
+);
+
+CREATE TABLE TIMELEAPS
+(
+ID SERIAL PRIMARY KEY,
+INITIATOR INT REFERENCES MEMBERS,
+DEPARTURE_TIMELINE INT REFERENCES TIMELINES,
+ARRIVAL_TIMELINE INT REFERENCES TIMELINES
+);
+
+CREATE TABLE INVENTORY
+(
+ID SERIAL PRIMARY KEY,
+OBTAINING_DATE DATE NOT NULL CHECK (OBTAINING_DATE>'01-01-1000'),
+LOCATION INT REFERENCES PLACES,
+DESCRIPTION TEXT,
+COST REAL NOT NULL CHECK (COST>0)
+);
+
+CREATE TABLE EXPERIMENTS
+(
+ID SERIAL PRIMARY KEY,
+DESCRIPTION VARCHAR(50) NOT NULL,
+DATE DATE NOT NULL
+);
+
+CREATE TABLE LOCATION
+(
+EXPERIMENT_ID INT REFERENCES EXPERIMENTS,
+PLACE_ID INT REFERENCES PLACES,
+PRIMARY KEY (EXPERIMENT_ID, PLACE_ID)
+);
+
+CREATE TABLE PARTICIPATION
+(
+PARTICIPANT_ID INT REFERENCES MEMBERS,
+EXPERIMENT_ID INT REFERENCES EXPERIMENTS,
+PRIMARY KEY(EXPERIMENT_ID, PARTICIPANT_ID)
+);
+
+CREATE TABLE USAGE
+(
+EXPERIMENT_ID INT REFERENCES EXPERIMENTS,
+INVENTORY_ID INT REFERENCES INVENTORY,
+BROKEN BOOLEAN,
+PRIMARY KEY(EXPERIMENT_ID, INVENTORY_ID)
+);
+
+
+CREATE TABLE INVENTIONS
+(
+ID SERIAL PRIMARY KEY,
+NAME TEXT NOT NULL,
+INVENTING_DATE DATE NOT NULL CHECK (INVENTING_DATE>'01-01-2013'),
+DESCRIPTION TEXT
+);
+
+CREATE TABLE INVENTING
+(
+INVENTION_ID INT REFERENCES INVENTIONS,
+INVENTOR_ID INT REFERENCES MEMBERS
+);
+
+
+CREATE TABLE CONSUMPTION
+(
+ID SERIAL PRIMARY KEY,
+SUMM INT NOT NULL CHECK (SUMM>=0),
+INVENTORY INT REFERENCES INVENTORY,
+EXPERIMENT INT REFERENCES EXPERIMENTS,
+OBJECT INT REFERENCES MEMBERS,
+DATE DATE NOT NULL,
+CHECK ((CONSUMPTION.EXPERIMENT=NULL AND CONSUMPTION.INVENTORY<>NULL) OR (CONSUMPTION.EXPERIMENT<>NULL AND CONSUMPTION.INVENTORY=NULL))
+);
+
+CREATE TABLE DISCOVERIES
+(
+ID SERIAL PRIMARY KEY,
+DISCOVERY_DATE DATE NOT NULL,
+EXPERIMENT_ID INT REFERENCES EXPERIMENTS,
+DESCRIPTION TEXT
+);
+
+CREATE TABLE DISCOVERING
+(
+DISCOVERY_ID INT REFERENCES DISCOVERIES,
+DISCOVERER_ID INT REFERENCES MEMBERS
+);
+
+ALTER TABLE DISCOVERIES ADD CONSTRAINT "5" FOREIGN KEY(DISCOVERER_ID) REFERENCES DISCOVERING(DISCOVERER_ID);
+
+DROP FUNCTION generateNCortegesForEachTable(n integer); 
+
+CREATE OR REPLACE FUNCTION generateNCortegesForEachTable(n integer) 
+	RETURNS text AS 
+	$$
+	declare---------------------------------------------------------------------------------------------DECLARE тут
+
+	outputText text;
+
+	nameArray text[] := array['Окабэ','Маюри','Итару','Курису','Моэка','Рука','Фэйрис','Румиха','Судзуха','Хооин'];
+	surnameArray text[] := array['Сиина','Хасида','Макисе','Кирю','Урусибару','Нян-нян','Акиха','Аманэ','Кёма','Ринтару'];
+	dateArray date[] := array['1998-05-16', '2000-12-31', '1990-06-14', '1846-01-08', '1898-10-08', '1974-09-14', '2015-01-01', '1906-04-23'];
+	adressesArray text[] := array['Автостроителей, 84а', 'Космонавтов, 13', 'Новоизмайловский, 16 к3', 'Кронверкский, 49', 'Не дом и не улица', 'www.Ленинград'];
+	inventoryArray text[] := array['Вилка','Ложка','Щипцы для сахара','Плед','Икорница','Микроволновка','Золотой унитаз','Швабра','Банан','Тряпка'];
+	discoveriesArray text[] := array['Бутылка открывается глазом','Микроволновки вибрируют в другую сторону','Сухой доширак съедобен','Ноый принглз не оч','Доширак альденте вкуснее','блинчики Морозко можно не греть'];
+	inventionsArray text[] := array['Кетчонез 30 на 70','Микроволнующая не туда микроволновка','Курсовая по БД','БЭВМ','Носки с сандалиями','Смываемая втулка'];
+	dMailArray text[] := array['Ты дурак', 'Пива не хватило возьми на две бутылки больше', 'Садись за курсач пораньше', 'Не суй лампочку в рот', 'От этого вина болит голова', 'Сегодня не прогуливай', 'Через лес - плохая идея', 'Кефир испорчен, не трожь!!!1!1', 'В пятёрочке наггетсы по акции', 'Дебил, яичница горит'];
+	distinctionsArray text[] := array['Кетчонез 30 на 70 невкусный'];
+	reasonOfLeapArray text[] := array['Просто захотелось','Спасался'];
+	placeFunctionArray text[] := array['Склад','Лаборатория','Уборная','Офис','Серверная','Полигон','Кухня'];
+	experimentDescriptionArray text[] := array['Проверка лучшего соотношения кетчонеза','Измерение расстояния до Сириуса']
+
+	arrayForIds integer[];
+
+	freeIds1 integer[];
+	freeIds2 integer[];
+
+	i integer;
+	j integer;
+
+	aDate date;
+	bDate date;
+	aStr text;
+	bStr text;
+	aInt integer;
+	bInt integer;
+	cInt integer;
+
+	begin-----------------------------------------------------------------------------------------------BEGIN тут
+
+	for i in 1..n loop
+	aStr := reasonOfLeapArray[round(random()*(array_length(reasonOfLeapArray,1)-1)+1)];
+	bStr := distinctionsArray[round(random()*(array_length(distinctionsArray,1)-1)+1)];
+	insert into TIMELINES(DIVERSION_LEVEL, REASON_OF_LEAP, DISTINCTIONS) values (random(), aStr, bStr);
+	end loop;
+
+	for i in 1..n loop
+	aStr := adressesArray[round(random()*(array_length(adressesArray,1)-1)+1)];
+	bStr := placeFunctionArray[round(random()*(array_length(placeFunctionArray,1)-1)+1)];
+	insert into PLACES(ADRESS, SQUARE, FUNCTION) values (aStr, trunc(random()*199+1), bStr);
+	end loop;
+
+	for i in 1..n loop
+	aStr := nameArray[round(random()*(array_length(nameArray,1)-1)+1)]||' '||surnameArray[round(random()*(array_length(surnameArray,1)-1)+1)];
+	aDate := dateArray[round(random()*(array_length(dateArray,1)-1)+1)];
+	arrayForIds := array(SELECT ID FROM PLACES);
+	aInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	insert into MEMBERS(NAME, AGE, HIRING_DATE, WORKPLACE) values (aStr, round(random()*110)+10, aDate, aInt);
+	end loop;
+
+	for i in 1..n loop
+	arrayForIds := array(SELECT ID FROM MEMBERS);
+	aInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	bInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	loop 
+	aDate := dateArray[round(random()*(array_length(dateArray,1)-1)+1)];
+	bDate := dateArray[round(random()*(array_length(dateArray,1)-1)+1)];
+	if aDate > bDate then
+	exit;
+	end if;
+	end loop;
+	arrayForIds := array(SELECT ID FROM TIMELINES);
+	cInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	dInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	aStr := dMailArray[round(random()*(array_length(dMailArray,1)-1)+1)];
+	insert into D_MAILS(SENDER, RECEPIENT, DATE_SEND, DATE_RECIEVED, TIMELINE_BEFORE, TIMELINE_AFTER, TEXT) values (aInt, bInt, aDate, bDate, cInt, dInt, aStr);
+	end loop;
+
+	for i in 1..n loop
+	arrayForIds := array(SELECT ID FROM MEMBERS);
+	aInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	arrayForIds := array(SELECT ID FROM TIMELINES);
+	bInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	cInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	insert into TIMELEAPS(INITIATOR, DEPARTURE_TIMELINE, ARRIVAL_TIMELINE) values (aInt, bInt, cInt);
+	end loop;
+
+	for i in 1..n loop
+	aDate := dateArray[round(random()*(array_length(dateArray,1)-1)+1)];
+	arrayForIds := array(SELECT ID FROM PLACES);
+	aInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
+	aStr := inventoryArray[round(random()*(array_length(inventoryArray,1)-1)+1)];
+	insert into INVENTORY(OBTAINING_DATE, LOCATION, DESCRIPTION, COST) values (aDate, aInt, aStr, random()*99999+1);
+	end loop;
+
+	for i in 1..n loop
+	aDate := dateArray[round(random()*(array_length(dateArray,1)-1)+1)];
+	aStr := experimentDescriptionArray[round(random()*(array_length(experimentDescriptionArray,1)-1)+1)];
+	insert into EXPERIMENTS(DESCRIPTION, DATE) values (aStr, aDate);
+	end loop;
+
+	freeIds1 := array(SELECT ID FROM MEMBERS);
+	freeIds2 := array(SELECT ID FROM );
+
+
+
+	outputText := 'Done!';
+	return outputText;
+	end;------------------------------------------------------------------------------------------------END тут
+	$$
+LANGUAGE 'plpgsql';
+
+SELECT generateNCortegesForEachTable(20);
+

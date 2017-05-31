@@ -197,7 +197,7 @@ CREATE OR REPLACE FUNCTION generateNCortegesForEachTable(n integer)
 	aDate := dateArray[round(random()*(array_length(dateArray,1)-1)+1)];
 	arrayForIds := array(SELECT ID FROM PLACES);
 	aInt := arrayForIds[round(random()*(array_length(arrayForIds,1)-1)+1)];
-	insert into MEMBERS(NAME, AGE, HIRING_DATE, WORKPLACE) values (aStr, round(random()*110)+10, aDate, aInt);
+	insert into MEMBERS(NAME, AGE, HIRING_DATE, WORKPLACE) values (aStr, round(random()*106)+14, aDate, aInt);
 	end loop;
 
 	for i in 1..n loop
@@ -242,9 +242,37 @@ CREATE OR REPLACE FUNCTION generateNCortegesForEachTable(n integer)
 	end loop;
 
 	freeIds1 := array(SELECT ID FROM MEMBERS);
-	freeIds2 := array(SELECT ID FROM );
+	freeIds2 := array(SELECT ID FROM EXPERIMENTS);
 
+	for i in 1..n loop
+	aInt := freeIds1[round(random()*(array_length(freeIds1,1)-1)+1)];
+	freeIds1 := array_remove(freeIds1, aInt);
+	bInt := freeIds2[round(random()*(array_length(freeIds2,1)-1)+1)];
+	freeIds2 := array_remove(freeIds2, bInt);
+	insert into PARTICIPATION(EXPERIMENT_ID, PARTICIPANT_ID) values (bInt, aInt);
+	end loop;
 
+	freeIds1 := array(SELECT ID FROM PLACES);
+	freeIds2 := array(SELECT ID FROM EXPERIMENTS);
+
+	for i in 1..n loop
+	aInt := freeIds1[round(random()*(array_length(freeIds1,1)-1)+1)];
+	freeIds1 := array_remove(freeIds1, aInt);
+	bInt := freeIds2[round(random()*(array_length(freeIds2,1)-1)+1)];
+	freeIds2 := array_remove(freeIds2, bInt);
+	insert into LOCATION(EXPERIMENT_ID, PLACE_ID) values (bInt, aInt);
+	end loop;
+
+	freeIds1 := array(SELECT ID FROM INVENTORY);
+	freeIds2 := array(SELECT ID FROM EXPERIMENTS);
+
+	for i in 1..n loop
+	aInt := freeIds1[round(random()*(array_length(freeIds1,1)-1)+1)];
+	freeIds1 := array_remove(freeIds1, aInt);
+	bInt := freeIds2[round(random()*(array_length(freeIds2,1)-1)+1)];
+	freeIds2 := array_remove(freeIds2, bInt);
+	insert into USAGE(EXPERIMENT_ID, INVENTORY_ID) values (bInt, aInt);
+	end loop;
 
 	outputText := 'Done!';
 	return outputText;

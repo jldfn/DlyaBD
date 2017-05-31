@@ -138,8 +138,6 @@ DISCOVERY_ID INT REFERENCES DISCOVERIES,
 DISCOVERER_ID INT REFERENCES MEMBERS
 );
 
-ALTER TABLE DISCOVERIES ADD CONSTRAINT "5" FOREIGN KEY(DISCOVERER_ID) REFERENCES DISCOVERING(DISCOVERER_ID);
-
 DROP FUNCTION generateNCortegesForEachTable(n integer); 
 
 CREATE OR REPLACE FUNCTION generateNCortegesForEachTable(n integer) 
@@ -160,7 +158,7 @@ CREATE OR REPLACE FUNCTION generateNCortegesForEachTable(n integer)
 	distinctionsArray text[] := array['Кетчонез 30 на 70 невкусный'];
 	reasonOfLeapArray text[] := array['Просто захотелось','Спасался'];
 	placeFunctionArray text[] := array['Склад','Лаборатория','Уборная','Офис','Серверная','Полигон','Кухня'];
-	experimentDescriptionArray text[] := array['Проверка лучшего соотношения кетчонеза','Измерение расстояния до Сириуса']
+	experimentDescriptionArray text[] := array['Проверка лучшего соотношения кетчонеза','Измерение расстояния до Сириуса'];
 
 	arrayForIds integer[];
 
